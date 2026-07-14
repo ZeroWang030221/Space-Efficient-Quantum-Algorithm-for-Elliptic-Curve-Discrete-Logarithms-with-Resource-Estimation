@@ -336,6 +336,10 @@ The default point-addition suite checks:
 - compiled arithmetic subblock assembly for a small modulus;
 - a tiny integrated point-addition counter report using a synthetic Algorithm-3 JSON, so the report path is tested without running a large EEA count.
 
+The large-prime regression matrix covers representative pairs of the field bit width `n` and prime modulus `p`, ranging from 12-bit to 512-bit prime fields.  The tested instances include, for example, `n=16, p=65521`, `n=32, p=4294967291`, the secp256k1 prime at `n=256`, and representative primes at `n=128, 160, 192, 224, 384, 512`.
+
+For each `(n,p)` pair, the tests include boundary, symmetric, random, and relatively long EEA traces.  Full compiled-arithmetic assembly is run only for selected moderate-width instances, while the larger `(n,p)` pairs are used to validate circuit construction, register layout, scheduling, and recursive resource-counting paths.
+
 Useful variants:
 
 ```bash
