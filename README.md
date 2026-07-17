@@ -17,6 +17,8 @@ The current codebase is centered on three workflows:
 .
 ├── README.md
 │
+├── eea_model/: original classical EEA reference implementation used for algorithm prototyping and correctness validation.
+│
 ├── run_eea_s835_fastdual_recursive_chunks_checkpoint.py
 ├── run_eea_s835_fastdual_recursive_chunks_checkpoint_nctopt.py
 ├── count_s835_fastdual_wrapped_point_addition_blocks_compiled.py
