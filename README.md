@@ -4,7 +4,7 @@ This repository contains Qiskit code for resource estimation of the space-effici
 
 The current codebase is centered on three workflows:
 
-1. checkpointed recursive counting of the modular inversion circuit;
+1. chunkwise recursive counting of the modular inversion circuit;
 2. optional local NCT-template optimization of the circuit;
 3. compiled blockwise resource estimation of the wrapped affine point-addition circuit.
 
@@ -50,32 +50,32 @@ The current codebase is centered on three workflows:
   Counts the EEA Algorithm-3 steps recursively, in checkpointed chunks.
 
 - `run_eea_s835_fastdual_recursive_chunks_checkpoint_nctopt.py`  
-  Same EEA counting workflow, but with bounded fail-open local NCT-template optimization.
+  Same EEA counting workflow, but with local NCT-template optimization.
 
 - `count_s835_fastdual_wrapped_point_addition_blocks_compiled.py`  
   Counts the wrapped point-addition circuit by recursively counting reusable compiled subblocks and assembling the repeated arithmetic components with exact multiplicities.
 
-### Core EEA files
+### EEA files
 
-- `eea_circuit_s835_fastdual.py`: production S835 fast-dual backend.  For `n=256`, the wrapped point-addition layout uses `835 = 1 + 3*256 + 66` qubits.
-- `eea_circuit_s835_lowaux.py`: lower-auxiliary EEA support routines used by the fast-dual backend.
-- `eea_circuit_updated.py`: shared EEA building blocks, active-window logic, Algorithm-3 step construction, and recursive operation counting helpers.
-- `eea_circuit.py`: compatibility shim for `test_eea_strict_main.py`; it re-exports `eea_circuit_s835_fastdual.py` under the historical module name `eea_circuit`.
+- `eea_circuit_s835_fastdual.py`:	Main implementation of the production EEA circuit.
+- `eea_circuit_s835_lowaux.py`:	Low-auxiliary helper routines used by the main implementation.
+- `eea_circuit_updated.py`:	Shared EEA building blocks and recursive resource-counting utilities.
+- `eea_circuit.py`:	Backward-compatibility wrapper for tests.
 
 ### Point-addition and arithmetic files
 
 - `point_addition_fig14_s835_fastdual_wrapped_quadratic.py`: builds the wrapped affine point-addition circuit corresponding to the Fig.14 schedule.
 - `quadratic_fig15_inplace_s835_fastdual_wrapped.py`: builds the Fig.15 in-place division and in-place multiplication structure with EEA, multiplication, measurement, reset, and feed-forward phase correction.
 - `quadratic_modular_arithmetic.py`: modular addition/subtraction, multiplication, inverse multiplication, doubling, and halving instructions used by the point-addition counter.
-- `quadratic_gidney_arithmetic.py`: Gidney-style arithmetic primitives and measurement/feed-forward helpers used by the quadratic modular arithmetic layer.
+- `quadratic_gidney_arithmetic.py`: Gidney-style arithmetic primitives and measurement and feed-forward helpers used by the quadratic modular arithmetic layer.
 - `quadratic_squ_minus.py`: square-minus block used in the affine point-addition schedule.
-- `under1000_eea_shared_s835_fastdual_wrapped.py`: shared EEA wrapper and S835 layout helper used by the point-addition circuit.
+- `under1000_eea_shared_s835_fastdual_wrapped.py`: shared EEA wrapper and helper used by the point-addition circuit.
 - `under1000_modular_arithmetic_base.py`: small shared modular-arithmetic utilities.
 
 ### Counting and optimization utilities
 
-- `ccx_recursive_block_counter.py`: recursive counter for Qiskit circuits/instructions, with policies for MCX expansion and SWAP expansion.
-- `nct_template_segment_optimizer.py`: local template/cancellation optimizer for reversible `{X, CX, CCX}` segments.
+- `ccx_recursive_block_counter.py`: recursive counter for Qiskit circuits, with policies for MCX expansion and SWAP expansion.
+- `nct_template_segment_optimizer.py`: local template-based optimizer for `{X, CX, CCX}` segments.
 
 ---
 
@@ -112,7 +112,7 @@ python test_point_addition_strict_main.py --skip-n256 --skip-report
 
 ---
 
-## 1. EEA Algorithm-3 recursive chunk counting
+## 1. EEA recursive chunk counting
 
 The standard EEA counting entry point is:
 
@@ -131,7 +131,7 @@ Important arguments:
 - `--n`: bit width.
 - `--T-max`: optional override for the number of Algorithm-3 steps; by default the value from `eea.get_n_config(n)` is used.
 - `--chunk-size`: number of Algorithm-3 steps counted per checkpoint chunk.
-- `--aux-size`: optional override for the helper-qubit pool; if omitted, the paper/S835 layout helper size is computed automatically.
+- `--aux-size`: optional override for the helper-qubit pool; if omitted, the layout helper size is computed automatically.
 - `--measurement-uncompute`: enables measurement-based uncomputation in the counted EEA blocks.
 - `--resume`: reuses existing non-empty chunk JSON files in `--workdir`.
 - `--workdir`: directory for per-chunk checkpoint files.
@@ -161,7 +161,7 @@ elapsed_s_so_far
 
 ---
 
-## 2. EEA counting with bounded NCT-template optimization
+## 2. EEA counting with NCT-template optimization
 
 The optimized counting entry point is:
 
@@ -180,7 +180,7 @@ python run_eea_s835_fastdual_recursive_chunks_checkpoint_nctopt.py \
   --out eea_s835_fastdual_algorithm3_recursive_chunks_n128_measurement_nctopt_failopen_r1_seg40_to10.json
 ```
 
-This workflow attempts local template optimization on reversible `{X, CX, CCX}` segments.  It is designed as a bounded fail-open counter: if an optimized step times out or raises an exception, that step is counted exactly without template rounds and then checkpointed, so the final reported counts remain complete.
+This workflow attempts local template optimization on  `{X, CX, CCX}` segments.  It is designed as a bounded fail-open counter: if an optimized step times out or raises an exception, that step is counted exactly without template rounds and then checkpointed, so the final reported counts remain complete.
 
 Useful arguments in addition to the standard EEA arguments:
 
@@ -208,7 +208,7 @@ and chunk-level summaries under:
 
 ---
 
-## 3. Wrapped S835 point-addition compiled blockwise counting
+## 3. Wrapped point-addition compiled blockwise counting
 
 The point-addition counter depends on an EEA Algorithm-3 JSON produced by one of the EEA workflows above.  The `--n` value of the point-addition counter should match the `n` field in the EEA JSON.
 
@@ -271,7 +271,7 @@ validation
 elapsed_s
 ```
 
-The point-addition counter is not a closed-form formula.  It builds reusable Qiskit circuits/instructions, recursively counts them in the `{CCX, CX, X}` basis, and then assembles larger repeated blocks such as multiplication, inverse multiplication, in-place division, in-place multiplication, square-minus, and the total Fig.14 point-addition block.
+The point-addition counter builds reusable Qiskit circuits, recursively counts them in the `{CCX, CX, X}` basis, and then assembles larger repeated blocks such as multiplication, inverse multiplication, in-place division, in-place multiplication, square-minus, and the total Fig.14 point-addition block.
 
 ---
 
@@ -331,7 +331,7 @@ python test_point_addition_strict_main.py
 
 The default point-addition suite checks:
 
-- S835 wrapped point-addition register layout;
+- wrapped point-addition register layout;
 - the `n=256` width identity `835 = 1 + 3*256 + 66`;
 - Fig.14/Fig.15 top-level operation order;
 - explicit dynamic-circuit structure involving `H`, `measure`, `reset`, classically controlled `Z`, and `swap` operations;
