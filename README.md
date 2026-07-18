@@ -375,3 +375,19 @@ A typical workflow is:
 4. collect the `key_ccx`, `block_summaries`, and `qiskit_width_report` fields from the output report.
 
 For large widths, use `--resume` and keep the `--workdir` directories, since chunk and step checkpoints are meant to support interrupted long runs.
+
+## Citation
+
+If you use this codebase in your research, please cite:
+
+```bibtex
+@misc{luo2026quantumalgorithmellipticcurve,
+      title={Quantum Algorithm for Elliptic Curve Discrete Logarithms with Space-Efficient Point Addition}, 
+      author={Han Luo and Ziyi Yang and Jingquan Luo and Ziruo Wang and Yuexin Su and Xiaoming Sun and Lvzhou Li and Tongyang Li},
+      year={2026},
+      eprint={2607.13816},
+      archivePrefix={arXiv},
+      primaryClass={quant-ph},
+      url={https://arxiv.org/abs/2607.13816}, 
+}
+```
