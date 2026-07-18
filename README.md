@@ -1,4 +1,4 @@
-# Quantum Algorithm for Elliptic Curve Discrete Logarithms with Space Efficient Point Addition
+# Quantum Algorithm for Elliptic Curve Discrete Logarithms with Space-Efficient Point Addition
 
 This repository contains Qiskit code for resource estimation of the space-efficient quantum modular inversion and affine point-addition circuits used in elliptic-curve discrete logarithm settings.
 
